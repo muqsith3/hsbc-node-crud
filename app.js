@@ -5,21 +5,8 @@ const app = express();
 
 app.use(express.json()); //middleware
 
-// app.get('/', (req, res) => {
-//   res.status(200).json({ message: 'hello from the server side', app: 'Natours' });
-// });
-// app.post('/', (req, res) => {
-//   res.send('you can post to this endpoint...');
-// });
-
-// APPS
-// read data before sending
-const tours = JSON.parse(
-  fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`)
-);
-
-// route to handle get requests
-app.get("/api/v1/tours", (req, res) => {
+// CRUD functionality
+const getAllTours = (req, res) => {
   // route handlers
   res.status(200).json({
     // using JSON formatting standard
@@ -29,10 +16,9 @@ app.get("/api/v1/tours", (req, res) => {
       tours,
     },
   });
-});
+};
 
-// route to handle url parameters
-app.get("/api/v1/tours/:id", (req, res) => {
+const getTour = (req, res) => {
   console.log(req.params);
   const id = req.params.id * 1;
   const tour = tours.find((el) => el.id === id); //get id where is same as parameter
@@ -52,10 +38,9 @@ app.get("/api/v1/tours/:id", (req, res) => {
       tour: tour,
     },
   });
-});
+};
 
-// route to handle post requests
-app.post("/api/v1/tours", (req, res) => {
+const createTour = (req, res) => {
   // route handlers
   // console.log(req.body);
   const newId = tours[tours.length - 1].id + 1;
@@ -74,10 +59,8 @@ app.post("/api/v1/tours", (req, res) => {
       });
     }
   );
-});
-
-// route to handle delete requests
-app.delete("/api/v1/tours/:id", (req, res) => {
+};
+const updateTour = (req, res) => {
   if (req.params.id * 1 > tours.length) {
     return res.status(404).json({
       status: "fail",
@@ -86,9 +69,48 @@ app.delete("/api/v1/tours/:id", (req, res) => {
   }
   res.status(200).json({
     status: "success",
+    data: {
+      data: "updated tour here...",
+    },
+  });
+};
+
+const deleteTour = (req, res) => {
+  if (req.params.id * 1 > tours.length) {
+    return res.status(404).json({
+      status: "fail",
+      message: "invalid ID",
+    });
+  }
+  res.status(204).json({
+    status: "success",
     data: null,
   });
-});
+};
+
+// APPS
+// read data before sending
+const tours = JSON.parse(
+  fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`)
+);
+
+// route to handle get requests
+app.get("/api/v1/tours", getAllTours);
+// route to handle url parameters
+app.get("/api/v1/tours/:id", getTour);
+// route to handle post requests
+app.post("/api/v1/tours", createTour);
+// route to patch requests
+app.patch("/api/v1/tours/:id", updateTour);
+// route to handle delete requests
+app.delete("/api/v1/tours/:id", deleteTour);
+// refactoring code
+app.route("/api/v1/tours").get(getAllTours).create(createTour);
+app
+  .route("/api/v1/tours/:id")
+  .get(getTour)
+  .patch(updateTour)
+  .delete(deleteTour);
 
 const port = 3000;
 app.listen(port, () => {
